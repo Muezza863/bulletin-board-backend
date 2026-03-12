@@ -42,4 +42,4 @@ pipeline {
     }
 }
 
-//komen
+//komen versi 1
