@@ -1,32 +1,35 @@
 pipeline {
-    agent any // Artinya: Jalankan di komputer mana saja yang ada Jenkins-nya
+    agent any
 
     stages {
         // Tahap 1: Ambil kode terbaru dari Git
         stage('Ambil Kode') {
             steps {
-                git 'https://github.com/Muezza863/bulletin-board-backend.git'
+                git branch: 'main', url: 'https://github.com/Muezza863/bulletin-board-backend.git'
             }
         }
 
         // Tahap 2: Buat Image Docker
         stage('Build Image') {
             steps {
-                // Jenkins akan menjalankan perintah terminal untuk build docker
-                sh 'docker build -t bulletin-board-backend:latest .'
+                bat 'docker build -t bulletin-board-backend:latest .'
             }
         }
 
-        // Tahap 3: Jalankan Aplikasi
+        // Tahap 3: Run/Deploy menggunakan file .env yang disimpan di Jenkins Credentials
         stage('Run/Deploy') {
             steps {
-                // Matikan container lama (jika ada) dan jalankan yang baru
-                sh 'docker stop bulletin-board-backend || true'
-                sh 'docker rm bulletin-board-backend || true'
-                sh 'docker run -d --name bulletin-board-backend -p 80:3000 bulletin-board-backend:latest'
+                // withCredentials('secretFiles') memungkinkan kita untuk memakai file rahasia dari Jenkins
+                // 'bulletin-env-file' adalah ID Credential di Jenkins tempat Anda mengupload file .env
+                withCredentials([file(credentialsId: 'bulletin-env-file', variable: 'ENV_FILE')]) {
+                    
+                    bat 'docker stop bulletin-board-backend || exit 0'
+                    bat 'docker rm bulletin-board-backend || exit 0'
+
+                    // Menggunakan file rahasia yang dimount oleh Jenkins sementara melalui variabel ENV_FILE
+                    bat 'docker run -d --name bulletin-board-backend --env-file "%ENV_FILE%" -p 80:3000 bulletin-board-backend:latest'
+                }
             }
         }
     }
 }
-
-// TEST PERUBAHANNNN
