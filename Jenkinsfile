@@ -32,4 +32,12 @@ pipeline {
             }
         }
     }
+    post{
+        success {
+            echo 'Pipeline berhasil!'
+        }
+        failure {
+            echo 'Pipeline gagal!'
+        }
+    }
 }
